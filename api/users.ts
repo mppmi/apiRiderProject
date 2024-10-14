@@ -5,7 +5,7 @@ const bcrypt = require("bcryptjs");
 
 export const router = express.Router();
 
-router.get('/users', (req, res) => {
+router.get('/userPhone', (req, res) => {
     const userID = req.query.userID; 
 
     const query = 'SELECT * FROM users WHERE userID != ?';
