@@ -53,23 +53,23 @@ router.get('/rider', (req, res) => {
 });
 
 
-router.get('/Orderrider',(req,res)=>{
-    const riderID = req.query.riderID; 
+// router.get('/Orderrider',(req,res)=>{
+//     const riderID = req.query.riderID; 
 
-    const query = 'SELECT * FROM products WHERE userID = ?';
+//     const query = 'SELECT * FROM products WHERE userID = ?';
 
-    conn.query(query, [riderID], (error, results) => {
-      if (error) {
-        return res.status(500).json({ error: 'Database query error' });
-      }
+//     conn.query(query, [riderID], (error, results) => {
+//       if (error) {
+//         return res.status(500).json({ error: 'Database query error' });
+//       }
 
-      if (results.length > 0) {
-        res.json(results);
-      } else {
-        res.status(404).json({ error: 'No users found' });
-      }
-    });
-});
+//       if (results.length > 0) {
+//         res.json(results);
+//       } else {
+//         res.status(404).json({ error: 'No users found' });
+//       }
+//     });
+// });
 // Delete user and associated file from Firebase Storage
 // router.delete('/deleteUser', async (req, res) => {
 //   const userID = req.query.userID;
