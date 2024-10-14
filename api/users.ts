@@ -4,9 +4,10 @@ import mysql from "mysql";
 const bcrypt = require("bcryptjs");
 import multer from "multer";
 import { initializeApp } from "firebase/app";
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { getStorage, ref, uploadBytesResumable, deleteObject, listAll } from "firebase/storage";
 
 export const router = express.Router();
+
 // Firebase configuration
 const firebaseConfig = {
   apiKey: 'AIzaSyAiVnY-8Ajak4xVeQNLzynr8skqCgNFulg',
@@ -31,6 +32,7 @@ class FileMiddleware {
 }
 const fileUpload = new FileMiddleware();
 
+// Get all users except the specified user
 router.get('/users', (req, res) => {
     const userID = req.query.userID; 
 
@@ -48,6 +50,8 @@ router.get('/users', (req, res) => {
       }
     });
 });
+
+// Get specific user by userID
 router.get('/user', (req, res) => {
     const userID = req.query.userID; 
 
@@ -66,6 +70,7 @@ router.get('/user', (req, res) => {
     });
 });
 
+// Search for user by phone number
 router.get('/searchPhone', (req, res) => {
     const phone = req.query.phone; 
 
@@ -84,4 +89,36 @@ router.get('/searchPhone', (req, res) => {
     });
 });
 
- 
+// Delete user and associated file from Firebase Storage
+router.delete('/deleteUser', async (req, res) => {
+  const userID = req.query.userID;
+
+  const deleteQuery = 'DELETE FROM users WHERE userID = ?';
+
+  conn.query(deleteQuery, [userID], async (error, results) => {
+    if (error) {
+      return res.status(500).json({ error: 'Database query error' });
+    }
+
+    if (results.affectedRows > 0) {
+      // Define the folder path
+      const folderPath = `uploads/${userID}`;
+      const folderRef = ref(storage, folderPath);
+
+      try {
+        // List all items in the folder
+        const resList = await listAll(folderRef);
+        const deletePromises = resList.items.map((itemRef) => deleteObject(itemRef)); // Create an array of delete promises
+        
+        await Promise.all(deletePromises); // Wait for all delete operations to complete
+
+        res.json({ message: 'User and associated files deleted successfully' });
+      } catch (firebaseError) {
+        console.error('Firebase delete error:', firebaseError); // Log the error
+        res.status(500).json({ error: 'Error deleting files from Firebase Storage', details: firebaseError });
+      }
+    } else {
+      res.status(404).json({ error: 'User not found' });
+    }
+  });
+});

@@ -1,96 +1,105 @@
-// router.post(
-//     "/register",
-//     fileUpload.diskLoader.single("file"),
-//     async (req, res) => {
-//       const users: Users = req.body;
-//       const riders: Rider = req.body;
-  
-//       // ตรวจสอบรหัสผ่าน
-//       if (users.password !== users.confirmPassword) {
-//         res.status(400).json({ error: "Passwords do not match." });
-//         return;
-//       }
-  
-//       let checkphoneSql = `
-//     SELECT phone FROM users WHERE phone = ?
-//     UNION
-//     SELECT phone FROM riders WHERE phone = ?
-//   `;
-//       checkphoneSql = mysql.format(checkphoneSql, [users.phone, riders.phone]);
-  
-//       // ตรวจสอบเบอร์โทรศัพท์ซ้ำ
-//       conn.query(checkphoneSql, async (err, results) => {
-//         if (err) {
-//           console.error("Error checking phone number:", err);
-//           return res.status(600).json({ error: "Internal server error." });
-//         }
-  
-//         if (results.length > 0) {
-//           return res
-//             .status(409)
-//             .json({ error: "Phone number already registered." });
-//         }
-  
-//         // อัปโหลดรูปภาพไปยัง Firebase (หากมีรูป)
-//         let imageUrl = null;
-//         if (req.file) {
-//           try {
-//             const filename =
-//               Date.now() + "-" + Math.round(Math.random() * 10000) + ".png";
-//             const storageRef = ref(storage, "/images/" + filename);
-//             const metadata = { contentType: req.file.mimetype };
-  
-//             const snapshot = await uploadBytesResumable(
-//               storageRef,
-//               req.file.buffer,
-//               metadata
-//             );
-//             imageUrl = await getDownloadURL(snapshot.ref); // ดึง URL ของรูปภาพ
-//           } catch (error) {
-//             console.error("Error uploading to Firebase:", error);
-//             return res.status(509).json({ error: "Error uploading image." });
-//           }
-//         }
-  
-//         // ถ้าไม่มีปัญหา อัปเดตรหัสผ่าน และข้อมูลผู้ใช้ใหม่ลงในฐานข้อมูล
-//         try {
-//           console.log("User data:", users);
-  
-//           console.log("Hashing password...");
-//           const hashedPassword = await bcrypt.hash(users.password, 10);
-//           console.log("Hashed password:", hashedPassword);
-//           console.log("Image URL:", imageUrl);
-  
-//           let sql =
-//             "INSERT INTO `Users`(`phone`, `name`, `password`, `address`, `lat`, `long`, `image`) VALUES (?,?,?,?,?,?,?)";
-  
-//           sql = mysql.format(sql, [
-//             users.phone,
-//             users.name,
-//             hashedPassword,
-//             users.address,
-//             users.lat,
-//             users.long,
-//             imageUrl, // เก็บ URL ของรูปภาพในฐานข้อมูล
-//           ]);
-  
-//           // ใส่ผู้ใช้ใหม่ลงในฐานข้อมูล
-//           conn.query(sql, (err, result) => {
-//             if (err) {
-//               console.error("Error inserting user:", err);
-//               return res.status(501).json({ error: "Error registering user." });
-//             }
-  
-//             // ส่งผลลัพธ์กลับเมื่อการลงทะเบียนสำเร็จ
-//             return res.status(201).json({
-//               message: "User registered successfully.",
-//               imageUrl: imageUrl,
-//             });
-//           });
-//         } catch (hashError) {
-//           console.error("Error hashing password:", hashError);
-//           return res.status(500).json({ error: "Error registering user 1." });
-//         }
-//       });
+import { conn } from "../dbconnect"; 
+import express from "express";
+import mysql from "mysql";
+const bcrypt = require("bcryptjs");
+import multer from "multer";
+import { initializeApp } from "firebase/app";
+import { getStorage, ref, uploadBytesResumable, deleteObject, listAll } from "firebase/storage";
+
+export const router = express.Router();
+
+// // Firebase configuration
+// const firebaseConfig = {
+//   apiKey: 'AIzaSyAiVnY-8Ajak4xVeQNLzynr8skqCgNFulg',
+//   appId: '1:259988227090:android:db894289cac749ff6c04cb',
+//   messagingSenderId: '259988227090',
+//   projectId: 'project-rider-1b5ac',
+//   storageBucket: 'project-rider-1b5ac.appspot.com',
+// };
+// // Initialize Firebase
+// initializeApp(firebaseConfig);
+// const storage = getStorage();
+
+// // Multer setup for file uploads
+// class FileMiddleware {
+//   filename = "";
+
+//   public readonly diskLoader = multer({
+//     storage: multer.memoryStorage(),
+//     limits: { fileSize: 67108864 }, // 64MB limit
+//   });
+// }
+// const fileUpload = new FileMiddleware();
+
+
+
+// Get specific user by userID
+router.get('/rider', (req, res) => {
+    const riderID = req.query.riderID; 
+
+    const query = 'SELECT * FROM riders WHERE riderID = ?';
+
+    conn.query(query, [riderID], (error, results) => {
+      if (error) {
+        return res.status(500).json({ error: 'Database query error' });
+      }
+
+      if (results.length > 0) {
+        res.json(results);
+      } else {
+        res.status(404).json({ error: 'No users found' });
+      }
+    });
+});
+
+
+router.get('/Orderrider',(req,res)=>{
+    const riderID = req.query.riderID; 
+
+    const query = 'SELECT * FROM products WHERE userID = ?';
+
+    conn.query(query, [riderID], (error, results) => {
+      if (error) {
+        return res.status(500).json({ error: 'Database query error' });
+      }
+
+      if (results.length > 0) {
+        res.json(results);
+      } else {
+        res.status(404).json({ error: 'No users found' });
+      }
+    });
+});
+// Delete user and associated file from Firebase Storage
+// router.delete('/deleteUser', async (req, res) => {
+//   const userID = req.query.userID;
+
+//   const deleteQuery = 'DELETE FROM users WHERE userID = ?';
+
+//   conn.query(deleteQuery, [userID], async (error, results) => {
+//     if (error) {
+//       return res.status(500).json({ error: 'Database query error' });
 //     }
-//   );
+
+//     if (results.affectedRows > 0) {
+//       // Define the folder path
+//       const folderPath = `uploads/${userID}`;
+//       const folderRef = ref(storage, folderPath);
+
+//       try {
+//         // List all items in the folder
+//         const resList = await listAll(folderRef);
+//         const deletePromises = resList.items.map((itemRef) => deleteObject(itemRef)); // Create an array of delete promises
+        
+//         await Promise.all(deletePromises); // Wait for all delete operations to complete
+
+//         res.json({ message: 'User and associated files deleted successfully' });
+//       } catch (firebaseError) {
+//         console.error('Firebase delete error:', firebaseError); // Log the error
+//         res.status(500).json({ error: 'Error deleting files from Firebase Storage', details: firebaseError });
+//       }
+//     } else {
+//       res.status(404).json({ error: 'User not found' });
+//     }
+//   });
+// });
