@@ -176,10 +176,12 @@ router.post(
             console.error("Error inserting user:", err);
             return res.status(501).json({ error: "Error registering user." });
           }
+          const userID = result.insertId;
 
           return res.status(201).json({
             message: "User registered successfully.",
             imageUrl: imageUrl,
+            userID: userID,
           });
         });
       } catch (hashError) {
