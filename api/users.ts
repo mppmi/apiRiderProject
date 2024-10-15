@@ -4,7 +4,7 @@ import mysql from "mysql";
 const bcrypt = require("bcryptjs");
 import multer from "multer";
 import { initializeApp } from "firebase/app";
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { getStorage, ref, uploadBytesResumable, deleteObject, listAll } from "firebase/storage";
 
 export const router = express.Router();
 
@@ -46,6 +46,8 @@ router.get('/userPhone', (req, res) => {
       }
     });
 });
+
+// Get specific user by userID
 router.get('/user', (req, res) => {
     const userID = req.query.userID; 
 
@@ -64,6 +66,7 @@ router.get('/user', (req, res) => {
     });
 });
 
+// Search for user by phone number
 router.get('/searchPhone', (req, res) => {
     const phone = req.query.phone; 
 
