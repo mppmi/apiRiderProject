@@ -51,6 +51,7 @@ router.get('/rider', (req, res) => {
       }
     });
 });
+
 interface Product {
     productID: number;
     productPhoto: string;
@@ -88,10 +89,10 @@ interface Product {
       JOIN 
           \`order\` o ON p.orderID = o.orderID
       WHERE
-          o.photo IS NOT NULL AND o.photo != '0' AND o.photo != ''
+          o.photo IS NOT NULL AND o.photo != '0' AND o.photo != ''  AND o.Status = '0'
     `;
   
-    conn.query(query, (error, results: any[]) => {
+    conn.query(query, (error: mysql.MysqlError | null, results: any[]) => { // กำหนดประเภทที่นี่
       if (error) {
         return res.status(500).json({ error: error.message });
       }
@@ -129,4 +130,3 @@ interface Product {
       }
     });
   });
-  

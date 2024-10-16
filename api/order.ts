@@ -193,4 +193,89 @@ router.get('/addressorder/:orderID', (req, res) => {
     });
 });
 
-
+router.put(
+    "/updatephotostatus/:orderID",
+    fileUpload.diskLoader.single("file"),
+    async (req, res): Promise<void> => { 
+      let imageUrl: string | null = null; 
+  
+      if (req.file) {
+        try {
+          const filename =
+            Date.now() + "-" + Math.round(Math.random() * 10000) + ".png";
+          const storageRef = ref(storage, "/images/" + filename);
+          const metadata = { contentType: req.file.mimetype };
+  
+          const snapshot = await uploadBytesResumable(
+            storageRef,
+            req.file.buffer,
+            metadata
+          );
+          imageUrl = await getDownloadURL(snapshot.ref); 
+        } catch (error) {
+          console.error("Error uploading to Firebase:", error);
+          res.status(509).json({ error: "Error uploading image." });
+          return;
+        }
+      }
+  
+      try {
+        console.log("Image URL:", imageUrl);
+        const orderID = req.params.orderID; 
+  
+        let sqlUpdate =
+          "UPDATE `order` SET `photo` = ? WHERE `orderID` = ?"; 
+  
+        sqlUpdate = mysql.format(sqlUpdate, [imageUrl, orderID]);
+  
+        conn.query(sqlUpdate, (updateErr) => {
+          if (updateErr) {
+            console.error("Error updating order photo:", updateErr);
+            res.status(501).json({ error: "Error updating order photo." });
+            return; 
+          }
+  
+          res.status(200).json({
+            message: "Photo updated successfully.",
+            imageUrl: imageUrl,
+          });
+        });
+      } catch (error) {
+        console.error("Error updating photo:", error);
+        res.status(500).json({ error: "Error updating photo." });
+      }
+    }
+  );
+  router.put(
+    "/updaterider/:riderID/:orderID",
+    (req, res) => {
+      try {
+        const riderID = req.params.riderID;
+        const orderID = req.params.orderID;
+  
+        // อัปเดตคำสั่ง SQL เพื่อรวมเงื่อนไข
+        let sqlUpdate =
+          "UPDATE `order` SET `riderID` = ?, `status` = CASE WHEN `status` = 0 THEN 1 ELSE `status` END WHERE `orderID` = ?";
+  
+        sqlUpdate = mysql.format(sqlUpdate, [riderID, orderID]);
+  
+        conn.query(sqlUpdate, (updateErr) => {
+          if (updateErr) {
+            console.error("Error updating order:", updateErr);
+            res.status(501).json({ error: "Error updating order." });
+            return; 
+          }
+  
+          res.status(200).json({
+            message: "Order updated successfully.",
+          });
+        });
+      } catch (error) {
+        console.error("Error updating order:", error);
+        res.status(500).json({ error: "Error updating order." });
+      }
+    }
+  );
+  
+  
+  
