@@ -47,7 +47,6 @@ router.get('/userPhone', (req, res) => {
     });
 });
 
-// Get specific user by userID
 router.get('/user', (req, res) => {
     const userID = req.query.userID; 
 
@@ -84,6 +83,8 @@ router.get('/searchPhone', (req, res) => {
         }
     });
 });
+
+
 interface Product {
   productID: number;
   productPhoto: string;
@@ -94,6 +95,7 @@ interface Order {
   orderID: number;
   userID: number; 
   name: string;
+  orderPhoto: string;
   phone: string;
   userPhoto: string;
   address: string;
@@ -112,13 +114,18 @@ router.get('/ordersent/:userIDSender', (req, res) => {
         u.address, 
         p.productID, 
         p.photo AS productPhoto, 
-        p.detail 
+        p.detail,
+        o.photo AS orderPhoto 
     FROM 
         users u 
     JOIN 
         products p ON u.userID = p.userID 
+        JOIN 
+        \`order\` o ON p.orderID = o.orderID
     WHERE 
         p.userIDSender = ?
+    AND 
+        o.photo IS NOT NULL AND o.photo != '0' AND o.photo != ''
   `;
 
   conn.query(query, [userIDSender], (error, results: any[]) => {
@@ -137,6 +144,7 @@ router.get('/ordersent/:userIDSender', (req, res) => {
             orderID: orderID,
             userID: item.userID, 
             name: item.name,
+            orderPhoto: item.orderPhoto,
             phone: item.phone,
             userPhoto: item.userPhoto,
             address: item.address,
@@ -158,41 +166,42 @@ router.get('/ordersent/:userIDSender', (req, res) => {
     }
   });
 });
-interface Products {
-  productID: number;
-  productPhoto: string;
-  detail: string;
-}
+
 
 interface Orders {
   orderID: number;
   userIDSender: number;  
   name: string;
   phone: string;
+  orderPhoto: string;
   userPhoto: string;
   address: string;
   products: Product[];
 }
-
 router.get('/orderreceiver/:userID', (req, res) => {
   const userID: number = parseInt(req.params.userID); 
   const query = `
     SELECT 
         p.orderID,
         p.userIDSender,   
-        u.name, 
-        u.phone, 
-        u.photo AS userPhoto, 
-        u.address, 
+        uSender.name AS senderName, 
+        uSender.phone AS senderPhone, 
+        uSender.photo AS senderPhoto, 
+        uSender.address AS senderAddress, 
         p.productID, 
         p.photo AS productPhoto, 
-        p.detail 
+        p.detail ,
+        o.photo AS orderPhoto 
     FROM 
-         users u  
+        users uSender  
     JOIN 
-      products p ON u.userID = p.userID 
+        products p ON uSender.userID = p.userIDSender 
+    JOIN 
+        \`order\` o ON p.orderID = o.orderID
     WHERE 
         p.userID = ? 
+    AND 
+       o.photo IS NOT NULL AND o.photo != '0' AND o.photo != ''
   `;
 
   conn.query(query, [userID], (error, results: any[]) => {
@@ -210,10 +219,11 @@ router.get('/orderreceiver/:userID', (req, res) => {
           orders[orderID] = {
             orderID: orderID,
             userIDSender: item.userIDSender,
-            name: item.name,
-            phone: item.phone,
-            userPhoto: item.userPhoto,
-            address: item.address,
+            name: item.senderName ,
+            orderPhoto: item.orderPhoto ,
+            phone: item.senderPhone,
+            userPhoto: item.senderPhoto ,
+            address: item.senderAddress ,
             products: []
           };
         }
@@ -224,6 +234,7 @@ router.get('/orderreceiver/:userID', (req, res) => {
           detail: item.detail
         });
       });
+
       const resultArray: Orders[] = Object.values(orders);
       res.status(200).json(resultArray);
     } else {

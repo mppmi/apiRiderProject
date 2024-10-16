@@ -92,11 +92,11 @@ interface Product {
 router.post('/addorder', (req, res) => {
     const order = req.body;
     
-    const { userID, userIDSender, Status, photo, products } = order;
+    const { userID, userIDSender, Status, photo, products,riderID } = order;
 
-    const insertOrderQuery = 'INSERT INTO `order` (`userID`, `userIDSender`, `Status`, `photo`) VALUES (?, ?, ?, ?)';
+    const insertOrderQuery = 'INSERT INTO `order` (`userID`, `userIDSender`, `Status`, `photo`,`riderID`) VALUES (?, ?, ?, ?,?)';
     
-    conn.query(insertOrderQuery, [userID, userIDSender, Status, photo], (error, results) => {
+    conn.query(insertOrderQuery, [userID, userIDSender, Status, photo,riderID], (error, results) => {
         if (error) {
             console.error('Database query error:', error); 
             return res.status(500).json({ error: 'Database query error' });
