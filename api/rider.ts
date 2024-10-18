@@ -89,7 +89,7 @@ interface Product {
       JOIN 
           \`order\` o ON p.orderID = o.orderID
       WHERE
-          o.photo IS NOT NULL AND o.photo != '0' AND o.photo != ''  AND o.Status = '0'
+          o.photo IS NOT NULL AND o.photo != '0' AND o.photo != ''  AND o.Status = '1'
     `;
   
     conn.query(query, (error: mysql.MysqlError | null, results: any[]) => { // กำหนดประเภทที่นี่

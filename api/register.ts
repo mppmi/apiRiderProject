@@ -161,13 +161,15 @@ router.post(
         console.log("Image URL:", imageUrl);
 
         let sql =
-          "INSERT INTO `users`(`phone`, `name`, `password`, `address`, `photo`) VALUES (?,?,?,?,?)";
+          "INSERT INTO `users`(`phone`, `name`, `password`, `address`, `lat`, `long`, `photo`) VALUES (?,?,?,?,?,?,?)";
 
         sql = mysql.format(sql, [
           users.phone,
           users.name,
           hashedPassword,
           users.address,
+          users.lat,
+          users.long,
           imageUrl,
         ]);
 

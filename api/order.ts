@@ -63,8 +63,7 @@ router.post(
         }
       );
       
-  
-      router.get('/products', (req, res) => {
+  router.get('/products', (req, res) => {
         const userID = req.query.userID; 
         const userIDSender = req.query.userIDSender; 
     
@@ -193,6 +192,7 @@ router.get('/addressorder/:orderID', (req, res) => {
     });
 });
 
+
 router.put(
     "/updatephotostatus/:orderID",
     fileUpload.diskLoader.single("file"),
@@ -224,10 +224,10 @@ router.put(
         const orderID = req.params.orderID; 
   
         let sqlUpdate =
-          "UPDATE `order` SET `photo` = ? WHERE `orderID` = ?"; 
-  
-        sqlUpdate = mysql.format(sqlUpdate, [imageUrl, orderID]);
-  
+        "UPDATE `order` SET photo = ?, status = 1 WHERE orderID = ?"; 
+      
+      sqlUpdate = mysql.format(sqlUpdate, [imageUrl, orderID]);
+    
         conn.query(sqlUpdate, (updateErr) => {
           if (updateErr) {
             console.error("Error updating order photo:", updateErr);
@@ -255,7 +255,7 @@ router.put(
   
         // อัปเดตคำสั่ง SQL เพื่อรวมเงื่อนไข
         let sqlUpdate =
-          "UPDATE `order` SET `riderID` = ?, `status` = CASE WHEN `status` = 0 THEN 1 ELSE `status` END WHERE `orderID` = ?";
+        "UPDATE `order` SET riderID = ?, status = 2 WHERE orderID = ?";
   
         sqlUpdate = mysql.format(sqlUpdate, [riderID, orderID]);
   
@@ -276,6 +276,4 @@ router.put(
       }
     }
   );
-  
-  
   

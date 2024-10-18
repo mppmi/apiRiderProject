@@ -99,6 +99,7 @@ interface Order {
   phone: string;
   userPhoto: string;
   address: string;
+  Status: string;
   products: Product[];
 }
 
@@ -115,7 +116,8 @@ router.get('/ordersent/:userIDSender', (req, res) => {
         p.productID, 
         p.photo AS productPhoto, 
         p.detail,
-        o.photo AS orderPhoto 
+        o.photo AS orderPhoto,
+        o.Status
     FROM 
         users u 
     JOIN 
@@ -125,7 +127,7 @@ router.get('/ordersent/:userIDSender', (req, res) => {
     WHERE 
         p.userIDSender = ?
     AND 
-        o.photo IS NOT NULL AND o.photo != '0' AND o.photo != ''
+        o.photo IS NOT NULL AND o.photo != '0' AND o.photo != '' AND o.Status != '0'
   `;
 
   conn.query(query, [userIDSender], (error, results: any[]) => {
@@ -148,6 +150,7 @@ router.get('/ordersent/:userIDSender', (req, res) => {
             phone: item.phone,
             userPhoto: item.userPhoto,
             address: item.address,
+            Status: item.Status,
             products: [] 
           };
         }
@@ -176,6 +179,7 @@ interface Orders {
   orderPhoto: string;
   userPhoto: string;
   address: string;
+  Status: string;
   products: Product[];
 }
 router.get('/orderreceiver/:userID', (req, res) => {
@@ -191,7 +195,8 @@ router.get('/orderreceiver/:userID', (req, res) => {
         p.productID, 
         p.photo AS productPhoto, 
         p.detail ,
-        o.photo AS orderPhoto 
+        o.photo AS orderPhoto,
+        o.Status
     FROM 
         users uSender  
     JOIN 
@@ -201,7 +206,7 @@ router.get('/orderreceiver/:userID', (req, res) => {
     WHERE 
         p.userID = ? 
     AND 
-       o.photo IS NOT NULL AND o.photo != '0' AND o.photo != ''
+       o.photo IS NOT NULL AND o.photo != '0' AND o.photo != '' AND o.Status != '0'
   `;
 
   conn.query(query, [userID], (error, results: any[]) => {
@@ -224,6 +229,7 @@ router.get('/orderreceiver/:userID', (req, res) => {
             phone: item.senderPhone,
             userPhoto: item.senderPhoto ,
             address: item.senderAddress ,
+            Status: item.Status,
             products: []
           };
         }
