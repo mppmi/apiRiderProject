@@ -158,7 +158,7 @@ router.get('/addressorder/:orderID', (req, res) => {
             u.address, 
             p.productID, 
             p.photo AS productPhoto, 
-            p.detail 
+            p.detail
         FROM 
             users u 
         JOIN 
@@ -192,6 +192,35 @@ router.get('/addressorder/:orderID', (req, res) => {
     });
 });
 
+router.put(
+  "/updatestatus/:orderID",
+  fileUpload.diskLoader.single("file"),
+  async (req, res) => {
+    try {
+      const orderID = req.params.orderID; 
+      
+      let sqlUpdate = "UPDATE `order` SET status = ? WHERE orderID = ?"; 
+      const status = req.body.Status; 
+    
+      sqlUpdate = mysql.format(sqlUpdate, [status, orderID]);
+  
+      conn.query(sqlUpdate, (updateErr) => {
+        if (updateErr) {
+          console.error("Error updating:", updateErr);
+          res.status(501).json({ error: "Error updating order" });
+          return; 
+        }
+
+        res.status(200).json({
+          message: "Order status updated successfully.",
+        });
+      });
+    } catch (error) {
+      console.error("Error updating order:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+);
 
 router.put(
     "/updatephotostatus/:orderID",
@@ -273,6 +302,44 @@ router.put(
       } catch (error) {
         console.error("Error updating order:", error);
         res.status(500).json({ error: "Error updating order." });
+      }
+    }
+  );
+  router.post(
+    "/_uploadImage",
+    fileUpload.diskLoader.single("file"), // Middleware to handle single file uploads
+    async (req: Request, res: Response): Promise<void> => {
+      let imageUrl: string | null = null; // Variable to hold the image URL
+  
+      // Check if a file was uploaded
+      if (req.file) {
+        try {
+          // Generate a unique filename
+          const filename = `${Date.now()}-${Math.round(Math.random() * 10000)}.png`;
+          const storageRef = ref(storage, `/images/${filename}`); // Firebase Storage reference
+  
+          // Metadata for the uploaded file
+          const metadata = {
+            contentType: req.file.mimetype,
+          };
+  
+          // Upload file to Firebase Storage
+          const snapshot = await uploadBytesResumable(storageRef, req.file.buffer, metadata);
+          
+          // Get the download URL
+          imageUrl = await getDownloadURL(snapshot.ref);
+          
+          // Send success response with the image URL
+          res.status(201).json({ message: "Image uploaded successfully", imageUrl });
+          return; // Ensure we return after sending the response
+        } catch (error) {
+          console.error("Error uploading to Firebase:", error);
+          res.status(500).json({ error: "Error uploading image." });
+          return; // Ensure we return after sending the response
+        }
+      } else {
+        res.status(400).json({ error: "No file uploaded." }); // Handle case where no file is uploaded
+        return; // Ensure we return after sending the response
       }
     }
   );
