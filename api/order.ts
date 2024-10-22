@@ -192,6 +192,53 @@ router.get('/addressorder/:orderID', (req, res) => {
     });
 });
 
+router.get('/addressorderSent/:orderID', (req, res) => {
+  const orderID = req.params.orderID;
+
+    const query = `
+        SELECT 
+            u.userID, 
+            u.name, 
+            u.phone, 
+            u.photo AS userPhoto, 
+            u.address, 
+            p.productID, 
+            p.photo AS productPhoto, 
+            p.detail 
+        FROM 
+            users u 
+        JOIN 
+            products p ON u.userID = p.userIDSender 
+        WHERE 
+            p.orderID = ?
+    `;
+
+    conn.query(query, [orderID], (error, results) => {
+        if (error) {
+            return res.status(500).json({ error: error.message });
+        }
+
+        if (results.length > 0) {
+            res.json({
+                orderID: orderID,
+                userID: results[0].userID,
+                name: results[0].name,
+                phone: results[0].phone,
+                userPhoto: results[0].userPhoto,
+                address: results[0].address,
+                products: results.map((row: ResultRow) => ({
+                    productID: row.productID,
+                    productPhoto: row.productPhoto,
+                    detail: row.detail
+                }))
+            });
+        } else {
+            res.status(404).json({ message: 'Order not found' });
+        }
+    });
+});
+
+
 
 router.put(
     "/updatephotostatus/:orderID",
